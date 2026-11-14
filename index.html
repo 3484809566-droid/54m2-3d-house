@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="zh-CN" data-type="product" data-radius="soft" data-buttons="solid" data-motion>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>54 m² 一室一厅三维住宅</title>
+  <meta name="description" content="依据视频中的 L 形户型重建的一室一厅三维住宅，可旋转、缩放、切换房间并查看主要家具的位置。">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="54 m² 一室一厅三维住宅">
+  <meta property="og:description" content="旋转、缩放并点选房间，查看六个空间和主要家具的位置。">
+  <meta property="og:image" content="share.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="page-type" content="product">
+  <meta name="site-kind" content="other">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="system.css">
+  <link rel="stylesheet" href="cards.css">
+  <link rel="stylesheet" href="motion.css">
+  <link rel="stylesheet" href="backgrounds.css">
+  <link rel="stylesheet" href="layout.css">
+  <link rel="stylesheet" href="icon.css">
+  <style>
+    @font-face {
+      font-family: "Bricolage Grotesque";
+      src: url("BricolageGrotesque.ttf") format("truetype");
+      font-style: normal;
+      font-weight: 400 700;
+      font-stretch: 75% 100%;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Figtree";
+      src: url("Figtree.ttf") format("truetype");
+      font-style: normal;
+      font-weight: 400 700;
+      font-display: swap;
+    }
+    :root {
+      --p-bg: #f2efe8; --p-surface: #e5dfd4; --p-ink: #24251f; --p-muted: #66645c;
+      --p-accent: #63735f; --p-accent-ink: #ffffff; --p-action: #4f604e; --p-action-ink: #ffffff;
+      --p-inv-bg: #24251f; --p-inv-surface: #30312b; --p-inv-ink: #f2efe8; --p-inv-muted: #aaa79f;
+      --p-inv-accent: #9cad91; --p-inv-accent-ink: #20241f; --p-inv-action: #9cad91; --p-inv-action-ink: #20241f;
+      --font-display: "Noto Serif SC", "Source Han Serif SC", serif;
+      --font-text: "Figtree", "Noto Sans SC", "Microsoft YaHei UI", sans-serif;
+      --display-weight: 400;
+      --display-tracking: -0.025em;
+      --display-tracking-xl: -0.035em;
+      --display-stretch: 100%;
+    }
+    .house-stage {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background-color: #e8e3da;
+      background-image:
+        radial-gradient(circle at 52% 48%, rgb(255 255 255 / .7), transparent 62%),
+        linear-gradient(rgb(73 77 67 / .045) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(73 77 67 / .045) 1px, transparent 1px);
+      background-size: auto, 44px 44px, 44px 44px;
+      overflow: hidden;
+      isolation: isolate;
+    }
+    .hero--product .hero__stage.house-stage {
+      margin-top: var(--s-5);
+      margin-bottom: calc(var(--s-5) - var(--hpadb, 64px));
+      border-radius: 0;
+      background-color: #e8e3da;
+      background-image:
+        radial-gradient(circle at 52% 48%, rgb(255 255 255 / .7), transparent 62%),
+        linear-gradient(rgb(73 77 67 / .045) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(73 77 67 / .045) 1px, transparent 1px);
+      background-size: auto, 44px 44px, 44px 44px;
+      overflow: hidden;
+    }
+    .house-stage canvas {
+      position: absolute;
+      inset: 0;
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+    .house-stage canvas:active { cursor: grabbing; }
+    .scene-fallback {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+    .house-stage[data-webgl="error"] .scene-fallback { display: block; }
+    .scene-rail {
+      position: absolute;
+      left: var(--s-4);
+      bottom: var(--s-4);
+      z-index: 3;
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--s-2);
+      max-width: calc(100% - var(--s-8));
+      padding: var(--s-2);
+      border: 1px solid var(--line);
+      border-radius: var(--r-lg);
+      background: color-mix(in oklab, var(--p-bg) 92%, transparent);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 12px 34px -24px rgb(31 34 29 / .65);
+    }
+    .scene-rail .btn {
+      height: 44px;
+      padding-inline: var(--s-3);
+      font-size: var(--t-small);
+    }
+    .scene-rail .btn[aria-pressed="true"] {
+      background: var(--action);
+      color: var(--action-ink);
+      border-color: var(--action);
+    }
+    .scene-help {
+      position: absolute;
+      right: var(--s-4);
+      top: var(--s-4);
+      z-index: 2;
+      padding: var(--s-2) var(--s-3);
+      border-radius: 999px;
+      background: color-mix(in oklab, var(--p-bg) 90%, transparent);
+      color: var(--p-ink);
+      font-size: var(--t-small);
+      backdrop-filter: blur(10px);
+    }
+    .scene-loading {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      z-index: 1;
+      color: var(--muted);
+      font-size: var(--t-small);
+    }
+    .house-stage[data-ready="true"] .scene-loading { display: none; }
+    .room-layout {
+      display: grid;
+      grid-template-columns: minmax(240px, .38fr) minmax(0, 1fr);
+      gap: var(--s-7);
+      align-items: stretch;
+      height: min(455px, calc(100svh - var(--padt) - var(--padb) - var(--nav) - 104px));
+      margin-top: var(--s-6);
+    }
+    .room-index {
+      display: grid;
+      align-content: start;
+      gap: var(--s-2);
+    }
+    .room-choice {
+      width: 100%;
+      min-height: 48px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: var(--s-3);
+      align-items: center;
+      padding: 0 var(--s-3);
+      border: 1px solid var(--line-strong);
+      border-radius: var(--r-btn);
+      background: transparent;
+      color: var(--ink);
+      text-align: left;
+      font: 500 var(--t-body)/1.2 var(--font-text);
+      cursor: pointer;
+    }
+    .room-choice:hover, .room-choice[aria-pressed="true"] {
+      background: var(--ink);
+      color: var(--bg);
+      border-color: var(--ink);
+    }
+    .room-choice__area { font-size: var(--t-small); opacity: .68; }
+    .plan-board {
+      position: relative;
+      min-height: 100%;
+      border: 1px solid color-mix(in oklab, var(--ink) 22%, transparent);
+      background: color-mix(in oklab, var(--p-accent-ink) 8%, transparent);
+      border-radius: var(--r-md);
+      overflow: hidden;
+    }
+    .plan-board svg { display: block; width: 100%; height: 100%; }
+    .plan-room {
+      fill: color-mix(in oklab, var(--p-accent-ink) 8%, transparent);
+      stroke: currentColor;
+      stroke-width: 2;
+      transition: fill 180ms ease, opacity 180ms ease;
+      cursor: pointer;
+    }
+    .plan-room:hover, .plan-room[aria-pressed="true"] {
+      fill: color-mix(in oklab, currentColor 22%, transparent);
+    }
+    .plan-outline { fill: none; stroke: currentColor; stroke-width: 4; }
+    .plan-part { fill: none; stroke: currentColor; stroke-opacity: .36; stroke-width: 1.4; }
+    .plan-label {
+      fill: currentColor;
+      font: 500 13px var(--font-text);
+      pointer-events: none;
+    }
+    .plan-num {
+      fill: var(--p-accent);
+      font: 500 12px var(--font-text);
+      pointer-events: none;
+    }
+    .plan-detail {
+      display: grid;
+      gap: var(--s-2);
+      margin-top: var(--s-4);
+      color: var(--muted);
+      font-size: var(--t-small);
+    }
+    .plan-detail strong { color: var(--ink); font-weight: 500; }
+    .dimension-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(360px, .8fr);
+      gap: var(--s-8);
+      align-items: center;
+      margin-top: var(--s-5);
+    }
+    .spec-columns {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--s-8);
+      margin-top: var(--s-6);
+    }
+    .spec-columns h3 { margin-bottom: var(--s-3); }
+    .spec-columns .rows { margin: 0; }
+    .spec-list .rows__name { font-size: var(--t-card); }
+    .spec-list .rows__value { font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .dimension-figure {
+      width: 100%;
+      min-height: 340px;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--ink);
+    }
+    .dimension-figure svg { width: 100%; height: 100%; display: block; }
+    .dim-line { stroke: currentColor; stroke-width: 1.4; fill: none; }
+    .dim-fill { fill: color-mix(in oklab, currentColor 9%, transparent); stroke: currentColor; stroke-width: 1.2; }
+    .dim-text { fill: currentColor; font: 500 13px var(--font-text); }
+    .scene-note { color: var(--muted); font-size: var(--t-small); margin-top: var(--s-3); }
+    .footer-dark .footer__lede { color: var(--muted); }
+    .close--type .btn--wide { max-width: 640px; }
+    .hero--product h1 {
+      font-family: var(--font-display);
+      font-weight: var(--display-weight);
+      letter-spacing: var(--display-tracking-xl);
+    }
+    .hero-title-line {
+      display: block;
+      white-space: nowrap;
+    }
+    .section-head h2,
+    .spec-columns h3 {
+      font-family: var(--font-display);
+      font-weight: var(--display-weight);
+      letter-spacing: var(--display-tracking);
+    }
+    @media (max-width: 1023px) {
+      .room-layout { grid-template-columns: 1fr; height: auto; margin-top: var(--s-5); gap: var(--s-4); }
+      .room-index { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .plan-board { aspect-ratio: 2.25; min-height: 0; }
+      #dimensions { --padt: 96px; --padb: 48px; }
+      .dimension-grid { grid-template-columns: minmax(0, 1fr) minmax(280px, .78fr); gap: var(--s-5); margin-top: var(--s-5); align-items: start; }
+      .dimension-figure { min-height: 380px; }
+    }
+    @media (min-width: 1024px) and (max-width: 1279px) {
+      #rooms { --padt: 96px; --padb: 44px; }
+      #dimensions { --padt: 96px; --padb: 40px; }
+      .room-layout { height: 390px; }
+      .dimension-grid { gap: var(--s-5); align-items: start; }
+      #dimensions .spec-list .rows {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0 var(--s-4);
+      }
+      .dimension-figure { height: 330px; min-height: 330px; }
+      #dimensions .spec-list .rows > li { padding-block: var(--s-2); }
+      .spec-columns { gap: var(--s-6); }
+    }
+    @media (max-width: 639px) {
+      .hero--product .hero__stage.house-stage {
+        margin-top: var(--s-5);
+        min-height: 0;
+        aspect-ratio: 4 / 5;
+        flex: 1 1 auto;
+      }
+      .scene-rail {
+        left: var(--s-2);
+        right: var(--s-2);
+        bottom: var(--s-2);
+        max-width: none;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+      }
+      .scene-help { display: none; }
+      .room-index { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-2); }
+      .room-choice { min-height: 44px; padding-inline: var(--s-3); font-size: var(--t-small); }
+      .room-choice__area { font-size: 12px; }
+      .plan-board { aspect-ratio: 2.1; }
+      .plan-detail { margin-top: var(--s-3); }
+      .dimension-grid { grid-template-columns: 1fr; gap: var(--s-4); margin-top: var(--s-4); }
+      .spec-columns { grid-template-columns: 1fr; gap: var(--s-3); margin-top: var(--s-4); }
+      .spec-columns h3 { margin-bottom: var(--s-1); }
+      .spec-columns .rows > li {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 2px;
+        padding-block: 6px;
+      }
+      .spec-columns .rows__name { font-size: var(--t-body); }
+      .spec-columns .rows__value { font-size: var(--t-small); }
+      .dimension-figure { height: 150px; min-height: 150px; }
+      #dimensions .scene-note { display: none; }
+    }
+    @media (max-width: 359px) {
+      .hero--product .hero__stage.house-stage { height: 272px; min-height: 272px; aspect-ratio: auto; }
+      #dimensions { --padt: 64px; --padb: 24px; }
+      #dimensions .section-head p { display: none; }
+      .spec-columns { grid-template-columns: 1fr; gap: var(--s-3); }
+      .dimension-figure { display: none; }
+      #dimensions .spec-list .rows { gap: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .plan-room { transition: none; }
+    }
+  </style>
+  <script>
+    document.documentElement.classList.add("m-enter");
+    setTimeout(() => document.documentElement.classList.add("m-enter-done"), 700);
+  </script>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./three.module.js"
+      }
+    }
+  </script>
+</head>
+<body>
+  <header class="nav nav--centre">
+    <div class="wrap nav__bar">
+      <a class="skip-link" href="#top">跳到主要内容</a>
+      <a class="nav__logo" href="#top"><span class="mark" data-mark="ring" aria-hidden="true"></span>54㎡ 住宅</a>
+      <nav class="nav__links" aria-label="主要导航">
+        <div class="nav__item"><a class="nav__link" href="#model">全屋</a></div>
+        <div class="nav__item"><a class="nav__link" href="#rooms">房间</a></div>
+        <div class="nav__item"><a class="nav__link" href="#dimensions">家具</a></div>
+      </nav>
+      <div class="nav__actions">
+        <a class="btn btn--primary" href="#model">打开 3D 房屋</a>
+      </div>
+      <button class="nav__toggle" type="button" aria-expanded="false" aria-label="菜单">
+        <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M2 5h14M2 13h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero hero--product" id="model" data-enter aria-labelledby="hero-h">
+      <div class="wrap">
+        <div class="hero-text hero__in">
+          <div class="hero__head">
+            <div>
+              <h1 id="hero-h"><span class="hero-title-line">54 m² 一室一厅</span><span class="hero-title-line">三维住宅</span></h1>
+              <p class="hero__lead">依据视频中的 L 形平面重建。旋转并点选房间，查看空间关系、家具位置和比例。</p>
+            </div>
+            <div class="btn-row">
+              <a class="btn btn--primary" href="#model-stage">打开 3D 房屋</a>
+              <a class="btn btn--secondary" href="#rooms">查看户型平面</a>
+            </div>
+          </div>
+          <div class="hero__stage house-stage" id="model-stage" data-ready="false" role="application" tabindex="0" aria-label="三维房屋交互视图" aria-describedby="scene-help-text">
+            <img class="scene-fallback" src="scene-poster.png" alt="54平方米一室一厅住宅的三维剖切视图">
+            <div class="scene-loading">正在建立房屋模型</div>
+            <div class="scene-help" id="scene-help-text">拖动旋转 · 滚轮缩放 · 点击房间</div>
+            <div class="scene-rail" role="toolbar" aria-label="三维房屋视角">
+              <button class="btn btn--secondary" type="button" data-view="all" aria-pressed="true">全屋</button>
+              <button class="btn btn--secondary" type="button" data-view="bedroom" aria-pressed="false">卧室</button>
+              <button class="btn btn--secondary" type="button" data-view="living" aria-pressed="false">客餐厅</button>
+              <button class="btn btn--secondary" type="button" data-view="kitchen" aria-pressed="false">厨房</button>
+              <button class="btn btn--secondary" type="button" data-view="bath" aria-pressed="false">浴室</button>
+              <button class="btn btn--secondary" type="button" data-view="balcony" aria-pressed="false">阳台</button>
+              <button class="btn btn--secondary" type="button" data-action="cutaway" aria-pressed="true">剖切墙体</button>
+              <button class="btn btn--secondary" type="button" data-action="labels" aria-pressed="true">房间标注</button>
+              <button class="btn btn--secondary" type="button" data-action="rotate" aria-pressed="false">自动旋转</button>
+            </div>
+            <p class="sr-only" id="scene-status" role="status" aria-live="polite">正在载入房屋模型。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section ground-brand" id="rooms" aria-labelledby="rooms-h">
+      <div class="wrap">
+        <div class="section-head">
+          <h2 id="rooms-h">平面图与房间位置</h2>
+          <p>六个空间按视频平面排列。选择房间，在图上定位并查看当前尺寸。</p>
+        </div>
+        <div class="room-layout">
+          <div class="room-index" role="group" aria-label="房间选择">
+            <button class="room-choice" type="button" data-room="living" aria-pressed="true"><span>客餐厅</span><span class="room-choice__area">4.1 × 3.5 m</span></button>
+            <button class="room-choice" type="button" data-room="balcony" aria-pressed="false"><span>阳台</span><span class="room-choice__area">1.2 × 2.4 m</span></button>
+            <button class="room-choice" type="button" data-room="kitchen" aria-pressed="false"><span>厨房</span><span class="room-choice__area">4.1 × 1.5 m</span></button>
+            <button class="room-choice" type="button" data-room="bedroom" aria-pressed="false"><span>卧室</span><span class="room-choice__area">4.8 × 3.5 m</span></button>
+            <button class="room-choice" type="button" data-room="bath" aria-pressed="false"><span>浴室</span><span class="room-choice__area">1.9 × 1.9 m</span></button>
+            <button class="room-choice" type="button" data-room="hall" aria-pressed="false"><span>门厅</span><span class="room-choice__area">2.0 × 1.5 m</span></button>
+          </div>
+          <div class="plan-board" id="plan-board">
+            <svg id="room-plan" viewBox="0 0 880 620" role="img" aria-label="54平方米住宅的L形平面图，客餐厅在右上方，卧室在左侧，厨房和门厅在下部，阳台在最右侧">
+              <g id="plan-rooms"></g>
+            </svg>
+          </div>
+        </div>
+        <p class="plan-detail" id="room-detail" aria-live="polite"><strong>客餐厅</strong><span>约 4.1 × 3.5 m，右上方；沙发位于西北角，圆餐桌靠近东侧阳台。</span></p>
+      </div>
+    </section>
+
+    <section class="section" id="dimensions" aria-labelledby="dimensions-h">
+      <div class="wrap">
+        <div class="section-head">
+          <h2 id="dimensions-h">家具尺寸与位置</h2>
+          <p>家具按常见产品模数校准；绝对尺寸误差约 ±0.15 m。</p>
+        </div>
+        <div class="spec-columns">
+          <div>
+            <h3>卧室与起居</h3>
+            <ul class="rows">
+              <li><span class="rows__name">卧室双人床</span><span class="rows__value">1.65 × 2.00 m</span></li>
+              <li><span class="rows__name">卧室通顶衣柜</span><span class="rows__value">2.90 × 0.60 m</span></li>
+              <li><span class="rows__name">卧室书桌</span><span class="rows__value">0.95 × 0.56 m</span></li>
+              <li><span class="rows__name">真火壁炉</span><span class="rows__value">1.04 × 0.34 m</span></li>
+              <li><span class="rows__name">客餐厅沙发</span><span class="rows__value">2.00 × 0.76 m</span></li>
+              <li><span class="rows__name">圆餐桌</span><span class="rows__value">Ø 1.00 m</span></li>
+            </ul>
+          </div>
+          <div>
+            <h3>厨房、卫浴与阳台</h3>
+            <ul class="rows">
+              <li><span class="rows__name">厨房台面</span><span class="rows__value">深 0.58 m</span></li>
+              <li><span class="rows__name">咖啡机操作台</span><span class="rows__value">0.56 × 0.80 m</span></li>
+              <li><span class="rows__name">厨房岛台</span><span class="rows__value">1.30 × 0.50 m</span></li>
+              <li><span class="rows__name">浴室淋浴区</span><span class="rows__value">0.78 × 0.78 m</span></li>
+              <li><span class="rows__name">阳台折叠木椅</span><span class="rows__value">0.43 × 0.45 m</span></li>
+            </ul>
+          </div>
+        </div>
+        <p class="scene-note">模型使用真实深度测试，家具与墙体分别参与碰撞布置。</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer closing footer--dark ground-inverse" id="contact" aria-labelledby="close-h">
+    <div class="wrap">
+      <div class="closing__cta close--type">
+        <div class="section-head">
+          <h2 id="close-h">回到 3D 房屋</h2>
+          <p>旋转、缩放并查看六个空间。</p>
+        </div>
+        <a class="btn btn--primary btn--xl btn--wide" href="#model">打开 3D 房屋</a>
+      </div>
+      <div class="closing__links">
+        <div class="grid">
+          <div class="span-6 stack-4">
+            <a class="nav__logo" href="#top"><span class="mark" data-mark="ring" aria-hidden="true"></span>54㎡ 住宅</a>
+            <p class="footer__lede">视频户型重建与交互式空间查看</p>
+          </div>
+          <div class="span-3 start-7 footer__col"><h3>查看</h3><ul><li><a href="#model">全屋</a></li><li><a href="#rooms">房间</a></li><li><a href="#dimensions">家具</a></li></ul></div>
+          <div class="span-3 footer__col"><h3>模型</h3><ul><li><a href="#model">三维视图</a></li><li><a href="#rooms">平面位置</a></li></ul></div>
+        </div>
+        <div class="footer__legal">
+          <span>© 2026 54㎡ 住宅</span>
+          <details class="credits"><summary>字体与三维引擎授权</summary><p>Bricolage Grotesque 与 Figtree 使用 SIL Open Font License；Three.js 使用 MIT License。</p></details>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="system.js"></script>
+  <script type="module" src="motion.js"></script>
+  <script type="module" src="scene.js"></script>
+</body>
+</html>
